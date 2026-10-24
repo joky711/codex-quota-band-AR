@@ -6,7 +6,7 @@ RequestExecutionLevel user
 !define MUI_ICON "..\assets\app-icon.ico"
 !define MUI_UNICON "..\assets\app-icon.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\CodexQuota.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "完成后启动 Codex额度并打开新手引导"
+!define MUI_FINISHPAGE_RUN_TEXT "شغّل حصة Codex بعد الانتهاء وافتح دليل البداية"
 !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchCodexQuota"
 
 !ifndef APP_VERSION
@@ -22,7 +22,7 @@ RequestExecutionLevel user
   !error "APP_VERSION_INFO is required"
 !endif
 
-!define APP_NAME "Codex额度"
+!define APP_NAME "حصة Codex"
 !define APP_ID "CodexQuota"
 !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
 
@@ -35,20 +35,20 @@ VIProductVersion "${APP_VERSION_INFO}"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "FileVersion" "${APP_VERSION}"
-VIAddVersionKey "FileDescription" "${APP_NAME} Windows 本地服务"
+VIAddVersionKey "FileDescription" "${APP_NAME} - خدمة ويندوز المحلية"
 VIAddVersionKey "LegalCopyright" "Copyright © 2026 Codex Quota"
 
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
-!insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "Arabic"
 UninstPage uninstConfirm
 UninstPage instfiles
 
 Section "Install"
   ; The installed tray process keeps its own EXE open. Ask only our process
   ; to close before NSIS replaces the file; do not touch unrelated programs.
-  DetailPrint "正在关闭旧版 Codex额度..."
+  DetailPrint "جارٍ إغلاق النسخة القديمة من حصة Codex..."
   ExecWait '"$SYSDIR\taskkill.exe" /IM CodexQuota.exe /T /F'
   Sleep 1500
   SetOutPath "$INSTDIR"
@@ -69,7 +69,7 @@ Section "Install"
 
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\CodexQuota.exe"
-  CreateShortcut "$SMPROGRAMS\${APP_NAME}\卸载 ${APP_NAME}.lnk" "$INSTDIR\Uninstall.exe"
+  CreateShortcut "$SMPROGRAMS\${APP_NAME}\إزالة ${APP_NAME}.lnk" "$INSTDIR\Uninstall.exe"
 
   ; Keep hook installation in the same user-level install flow. This is
   ; idempotent and preserves other products' hooks in hooks.json.
@@ -78,7 +78,7 @@ SectionEnd
 
 Section "Uninstall"
   Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
-  Delete "$SMPROGRAMS\${APP_NAME}\卸载 ${APP_NAME}.lnk"
+  Delete "$SMPROGRAMS\${APP_NAME}\إزالة ${APP_NAME}.lnk"
   RMDir "$SMPROGRAMS\${APP_NAME}"
   Delete "$INSTDIR\CodexQuota.exe"
   Delete "$INSTDIR\libunwind.dll"

@@ -40,7 +40,7 @@ use windows_sys::Win32::System::Threading::CreateMutexW;
 use windows_sys::Win32::UI::Shell::*;
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
-const APP_NAME: &str = "Codex额度";
+const APP_NAME: &str = "حصة Codex";
 const APP_ICON_RESOURCE_ID: usize = 101;
 const HOST_PORT: u16 = 17_322;
 const TRAY_ICON_ID: u32 = 1;
@@ -81,19 +81,19 @@ const PAIRING_GUIDANCE_SIZE: i32 = 13;
 const PAIRING_CODE_SIZE: i32 = 22;
 const PAIRING_QR_SIZE: i32 = 286;
 const PAIRING_QR_TOP: i32 = 96;
-const PAIRING_HOOK_GUIDANCE: &str = "使用手机端「Codex额度」App 扫码";
-const PAIRING_APP_GUIDANCE: &str = "打开 App → 设置 → 连接电脑";
-const PAIRING_NETWORK_GUIDANCE: &str = "确保手机和电脑连接同一局域网";
-const PAIRING_TUTORIAL_BUTTON_LABEL: &str = "配对教学";
-const PAIRING_REFRESH_BUTTON_LABEL: &str = "刷新配对码";
+const PAIRING_HOOK_GUIDANCE: &str = "امسح الرمز بتطبيق «حصة Codex» في الجوال";
+const PAIRING_APP_GUIDANCE: &str = "افتح التطبيق ← الإعدادات ← ربط الكمبيوتر";
+const PAIRING_NETWORK_GUIDANCE: &str = "تأكد أن الجوال والكمبيوتر على نفس الشبكة";
+const PAIRING_TUTORIAL_BUTTON_LABEL: &str = "شرح الإقران";
+const PAIRING_REFRESH_BUTTON_LABEL: &str = "تحديث رمز الإقران";
 const PAIRING_TUTORIAL_STEPS: [&str; 4] = [
-    "1. 在电脑托盘菜单中选择「安装/修复任务 Hook」",
-    "2. 在 ChatGPT 中打开「设置 → 钩子」，并信任全部钩子",
-    "3. 在手机端打开「Codex额度」App，进入「设置 → 连接电脑」",
-    "4. 扫描二维码或输入 6 位配对码完成配对",
+    "1. من قائمة البرنامج في شريط المهام اختر «تثبيت/إصلاح Hook المهام»",
+    "2. في ChatGPT افتح «الإعدادات ← Hooks» ووافق على كل الـ Hooks",
+    "3. في الجوال افتح تطبيق «حصة Codex» ثم «الإعدادات ← ربط الكمبيوتر»",
+    "4. امسح رمز QR أو أدخل رمز الإقران المكوّن من 6 أرقام",
 ];
 const HOOK_INSTALLED_GUIDANCE: &str =
-    "任务 Hook 已安装或修复。\n请在 ChatGPT 中打开「设置 → 钩子」，并信任全部钩子。";
+    "تم تثبيت أو إصلاح Hook المهام.\nافتح في ChatGPT «الإعدادات ← Hooks» ووافق على كل الـ Hooks.";
 
 static APP: OnceLock<Arc<AppController>> = OnceLock::new();
 static PAIRING_WINDOWS: OnceLock<Mutex<HashMap<isize, PairingWindowData>>> = OnceLock::new();
@@ -172,10 +172,10 @@ impl AppController {
         let host = self
             .host
             .lock()
-            .map_err(|_| "Windows 服务状态不可用".to_string())?;
+            .map_err(|_| "حالة خدمة ويندوز غير متاحة".to_string())?;
         let host = host
             .as_ref()
-            .ok_or_else(|| "Windows 服务已停止".to_string())?;
+            .ok_or_else(|| "خدمة ويندوز متوقفة".to_string())?;
         self.runtime
             .block_on(host.begin_pairing(now_ms(), addresses))
             .map_err(|error| error.to_string())
@@ -185,10 +185,10 @@ impl AppController {
         let host = self
             .host
             .lock()
-            .map_err(|_| "Windows 服务状态不可用".to_string())?;
+            .map_err(|_| "حالة خدمة ويندوز غير متاحة".to_string())?;
         let host = host
             .as_ref()
-            .ok_or_else(|| "Windows 服务已停止".to_string())?;
+            .ok_or_else(|| "خدمة ويندوز متوقفة".to_string())?;
         self.runtime
             .block_on(host.revoke_phone())
             .map_err(|error| error.to_string())
@@ -289,7 +289,7 @@ fn main() {
         .iter()
         .any(|argument| argument == "--show-onboarding");
     if let Err(error) = run(show_onboarding) {
-        show_message("Codex额度无法启动", &error, MB_ICONERROR);
+        show_message("تعذّر تشغيل حصة Codex", &error, MB_ICONERROR);
     }
 }
 
@@ -301,7 +301,7 @@ fn run(show_onboarding: bool) -> Result<(), String> {
     unsafe { SetLastError(0) };
     let instance_mutex = unsafe { CreateMutexW(null(), 0, mutex_name.as_ptr()) };
     if instance_mutex.is_null() {
-        return Err("无法创建单实例锁".to_string());
+        return Err("تعذّر إنشاء قفل التشغيل الوحيد".to_string());
     }
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
         unsafe { CloseHandle(instance_mutex) };
@@ -353,7 +353,7 @@ fn run(show_onboarding: bool) -> Result<(), String> {
         upstream_confirmation_in_progress,
         last_upstream_confirmation_error: Arc::new(Mutex::new(None)),
     }))
-    .map_err(|_| "应用状态初始化失败".to_string())?;
+    .map_err(|_| "فشل تهيئة حالة التطبيق".to_string())?;
 
     unsafe {
         register_window_classes()?;
@@ -395,7 +395,7 @@ unsafe fn register_window_classes() -> Result<(), String> {
         ..Default::default()
     };
     if RegisterClassExW(&tray_class) == 0 {
-        return Err("无法注册托盘窗口".to_string());
+        return Err("تعذّر تسجيل نافذة شريط المهام".to_string());
     }
 
     let pairing_class_name = wide("CodexQuotaPairingWindow");
@@ -410,7 +410,7 @@ unsafe fn register_window_classes() -> Result<(), String> {
         ..Default::default()
     };
     if RegisterClassExW(&pairing_class) == 0 {
-        return Err("无法注册配对窗口".to_string());
+        return Err("تعذّر تسجيل نافذة الإقران".to_string());
     }
 
     let tutorial_class_name = wide("CodexQuotaPairingTutorialWindow");
@@ -425,7 +425,7 @@ unsafe fn register_window_classes() -> Result<(), String> {
         ..Default::default()
     };
     if RegisterClassExW(&tutorial_class) == 0 {
-        return Err("无法注册配对教学窗口".to_string());
+        return Err("تعذّر تسجيل نافذة شرح الإقران".to_string());
     }
 
     let diagnostics_class_name = wide("CodexQuotaDiagnosticsWindow");
@@ -440,7 +440,7 @@ unsafe fn register_window_classes() -> Result<(), String> {
         ..Default::default()
     };
     if RegisterClassExW(&diagnostics_class) == 0 {
-        return Err("无法注册诊断窗口".to_string());
+        return Err("تعذّر تسجيل نافذة التشخيص".to_string());
     }
     Ok(())
 }
@@ -463,7 +463,7 @@ unsafe fn create_tray_window() -> Result<HWND, String> {
         null(),
     );
     if window.is_null() {
-        Err("无法创建托盘窗口".to_string())
+        Err("تعذّر إنشاء نافذة شريط المهام".to_string())
     } else {
         Ok(window)
     }
@@ -478,7 +478,7 @@ unsafe fn add_tray_icon(window: HWND) -> Result<HICON, String> {
     copy_wide(&mut data.szTip, APP_NAME);
     if Shell_NotifyIconW(NIM_ADD, &data) == 0 {
         DestroyIcon(icon);
-        Err("无法创建通知区域图标".to_string())
+        Err("تعذّر إنشاء أيقونة منطقة الإشعارات".to_string())
     } else {
         Ok(icon)
     }
@@ -486,23 +486,23 @@ unsafe fn add_tray_icon(window: HWND) -> Result<HICON, String> {
 
 unsafe fn load_tray_icon() -> Result<HICON, String> {
     if TRAY_ICON_ICO.len() < 22 || TRAY_ICON_ICO[0..6] != [0, 0, 1, 0, 1, 0] {
-        return Err("托盘图标资源无效".to_string());
+        return Err("مورد الأيقونة غير صالح".to_string());
     }
     let image_size = u32::from_le_bytes(
         TRAY_ICON_ICO[14..18]
             .try_into()
-            .map_err(|_| "托盘图标资源无效".to_string())?,
+            .map_err(|_| "مورد الأيقونة غير صالح".to_string())?,
     );
     let image_offset = u32::from_le_bytes(
         TRAY_ICON_ICO[18..22]
             .try_into()
-            .map_err(|_| "托盘图标资源无效".to_string())?,
+            .map_err(|_| "مورد الأيقونة غير صالح".to_string())?,
     );
     let image_end = image_offset
         .checked_add(image_size)
-        .ok_or_else(|| "托盘图标资源无效".to_string())? as usize;
+        .ok_or_else(|| "مورد الأيقونة غير صالح".to_string())? as usize;
     if image_offset < 22 || image_end > TRAY_ICON_ICO.len() {
-        return Err("托盘图标资源无效".to_string());
+        return Err("مورد الأيقونة غير صالح".to_string());
     }
     let icon = CreateIconFromResourceEx(
         TRAY_ICON_ICO[image_offset as usize..image_end].as_ptr(),
@@ -514,7 +514,7 @@ unsafe fn load_tray_icon() -> Result<HICON, String> {
         LR_DEFAULTSIZE,
     );
     if icon.is_null() {
-        Err("无法加载托盘图标".to_string())
+        Err("تعذّر تحميل الأيقونة".to_string())
     } else {
         Ok(icon)
     }
@@ -576,22 +576,22 @@ unsafe fn show_tray_menu(window: HWND) {
         .is_some_and(|app| app.upstream_confirmation_in_progress());
     let (upstream_label, _) =
         upstream_usage_detail(&upstream, confirmation_in_progress, Utc::now());
-    append_menu(menu, MF_STRING | MF_DISABLED, 0, "服务运行中");
+    append_menu(menu, MF_STRING | MF_DISABLED, 0, "الخدمة تعمل");
     append_menu(
         menu,
         MF_STRING | MF_DISABLED,
         0,
         if connections > 0 {
-            "手机 已连接"
+            "الجوال متصل"
         } else {
-            "手机 未连接"
+            "الجوال غير متصل"
         },
     );
     append_menu(
         menu,
         MF_STRING | MF_DISABLED,
         0,
-        &format!("额度 {upstream_label}"),
+        &format!("الحصة {upstream_label}"),
     );
     for label in quota_labels {
         append_menu(menu, MF_STRING | MF_DISABLED, 0, &label);
@@ -606,20 +606,20 @@ unsafe fn show_tray_menu(window: HWND) {
         },
         MENU_REFRESH_STATUS as usize,
         if confirmation_in_progress {
-            "正在刷新…"
+            "جارٍ التحديث…"
         } else {
-            "刷新当前状态"
+            "تحديث الحالة الآن"
         },
     );
-    append_menu(menu, MF_STRING, MENU_PAIR as usize, "连接手机…");
-    append_menu(menu, MF_STRING, MENU_DIAGNOSTICS as usize, "连接与诊断…");
+    append_menu(menu, MF_STRING, MENU_PAIR as usize, "ربط الجوال…");
+    append_menu(menu, MF_STRING, MENU_DIAGNOSTICS as usize, "الاتصال والتشخيص…");
     AppendMenuW(menu, MF_SEPARATOR, 0, null());
-    append_menu(menu, MF_STRING, MENU_REVOKE as usize, "撤销手机配对");
+    append_menu(menu, MF_STRING, MENU_REVOKE as usize, "إلغاء إقران الجوال");
     append_menu(
         menu,
         MF_STRING,
         MENU_REPAIR_HOOK as usize,
-        "安装/修复任务 Hook…",
+        "تثبيت/إصلاح Hook المهام…",
     );
     AppendMenuW(menu, MF_SEPARATOR, 0, null());
     let startup_flags = if startup_enabled() {
@@ -631,10 +631,10 @@ unsafe fn show_tray_menu(window: HWND) {
         menu,
         startup_flags,
         MENU_STARTUP as usize,
-        "登录 Windows 时自动启动",
+        "التشغيل تلقائياً عند الدخول لويندوز",
     );
     AppendMenuW(menu, MF_SEPARATOR, 0, null());
-    append_menu(menu, MF_STRING, MENU_EXIT as usize, "退出");
+    append_menu(menu, MF_STRING, MENU_EXIT as usize, "خروج");
 
     let mut cursor = POINT::default();
     GetCursorPos(&mut cursor);
@@ -655,24 +655,24 @@ unsafe fn show_tray_menu(window: HWND) {
         MENU_REVOKE => {
             let confirmed = MessageBoxW(
                 window,
-                wide("撤销后，Android 手机必须重新配对。是否继续？").as_ptr(),
+                wide("بعد الإلغاء لازم تعيد إقران الجوال. هل تريد المتابعة؟").as_ptr(),
                 wide(APP_NAME).as_ptr(),
                 MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2,
             );
             if confirmed == IDYES {
                 if let Err(error) = APP
                     .get()
-                    .ok_or_else(|| "应用尚未初始化".to_string())
+                    .ok_or_else(|| "التطبيق لم يجهز بعد".to_string())
                     .and_then(|app| app.revoke_phone())
                 {
-                    show_message("撤销失败", &error, MB_ICONERROR);
+                    show_message("فشل الإلغاء", &error, MB_ICONERROR);
                 }
             }
         }
         MENU_STARTUP => {
             let next = !startup_enabled();
             if let Err(error) = set_startup_enabled(next) {
-                show_message("无法修改自动启动设置", &error, MB_ICONERROR);
+                show_message("تعذّر تعديل إعداد التشغيل التلقائي", &error, MB_ICONERROR);
             }
         }
         MENU_REFRESH_STATUS => {
@@ -682,7 +682,7 @@ unsafe fn show_tray_menu(window: HWND) {
         }
         MENU_REPAIR_HOOK => match install_hook_config() {
             Ok(()) => show_message(APP_NAME, HOOK_INSTALLED_GUIDANCE, MB_ICONINFORMATION),
-            Err(error) => show_message("任务 Hook 安装失败", &error, MB_ICONERROR),
+            Err(error) => show_message("فشل تثبيت Hook المهام", &error, MB_ICONERROR),
         },
         MENU_DIAGNOSTICS => show_diagnostics_window(),
         MENU_EXIT => {
@@ -702,15 +702,15 @@ unsafe fn show_pairing_from_app() {
     }
     let result = APP
         .get()
-        .ok_or_else(|| "应用尚未初始化".to_string())
+        .ok_or_else(|| "التطبيق لم يجهز بعد".to_string())
         .and_then(|app| app.pairing_presentation());
     match result {
         Ok(presentation) => {
             if let Err(error) = show_pairing_window(presentation) {
-                show_message("无法显示配对二维码", &error, MB_ICONWARNING);
+                show_message("تعذّر عرض رمز الإقران", &error, MB_ICONWARNING);
             }
         }
-        Err(error) => show_message("无法开始配对", &error, MB_ICONWARNING),
+        Err(error) => show_message("تعذّر بدء الإقران", &error, MB_ICONWARNING),
     }
 }
 
@@ -727,7 +727,7 @@ unsafe fn show_diagnostics_window() {
         SetForegroundWindow(existing);
         return;
     }
-    let title = wide("Codex额度 · 连接与诊断");
+    let title = wide("حصة Codex · الاتصال والتشخيص");
     let window = CreateWindowExW(
         WS_EX_APPWINDOW,
         class_name.as_ptr(),
@@ -743,7 +743,7 @@ unsafe fn show_diagnostics_window() {
         null(),
     );
     if window.is_null() {
-        show_message("无法显示连接与诊断", "无法创建诊断窗口", MB_ICONWARNING);
+        show_message("تعذّر عرض الاتصال والتشخيص", "تعذّر إنشاء نافذة التشخيص", MB_ICONWARNING);
         return;
     }
     center_auxiliary_window(window, null_mut());
@@ -756,7 +756,7 @@ unsafe fn show_diagnostics_window() {
 unsafe fn show_pairing_window(presentation: PairingPresentation) -> Result<(), String> {
     let data = pairing_window_data(presentation)?;
     let class_name = wide("CodexQuotaPairingWindow");
-    let title = wide("Codex额度 · 连接手机");
+    let title = wide("حصة Codex · ربط الجوال");
     let window = CreateWindowExW(
         WS_EX_APPWINDOW,
         class_name.as_ptr(),
@@ -772,12 +772,12 @@ unsafe fn show_pairing_window(presentation: PairingPresentation) -> Result<(), S
         null(),
     );
     if window.is_null() {
-        return Err("无法创建配对窗口".to_string());
+        return Err("تعذّر إنشاء نافذة الإقران".to_string());
     }
     PAIRING_WINDOWS
         .get_or_init(|| Mutex::new(HashMap::new()))
         .lock()
-        .map_err(|_| "配对窗口状态不可用".to_string())?
+        .map_err(|_| "حالة نافذة الإقران غير متاحة".to_string())?
         .insert(window as isize, data);
     center_auxiliary_window(window, null_mut());
     ShowWindow(window, SW_SHOWNORMAL);
@@ -810,7 +810,7 @@ fn pairing_window_data(presentation: PairingPresentation) -> Result<PairingWindo
 unsafe fn refresh_pairing_window(window: HWND) {
     let result = APP
         .get()
-        .ok_or_else(|| "应用尚未初始化".to_string())
+        .ok_or_else(|| "التطبيق لم يجهز بعد".to_string())
         .and_then(|app| app.pairing_presentation())
         .and_then(pairing_window_data);
     match result {
@@ -824,10 +824,10 @@ unsafe fn refresh_pairing_window(window: HWND) {
                 InvalidateRect(window, null(), 1);
                 UpdateWindow(window);
             } else {
-                show_message("无法刷新配对码", "配对窗口状态不可用", MB_ICONWARNING);
+                show_message("تعذّر تحديث رمز الإقران", "حالة نافذة الإقران غير متاحة", MB_ICONWARNING);
             }
         }
-        Err(error) => show_message("无法刷新配对码", &error, MB_ICONWARNING),
+        Err(error) => show_message("تعذّر تحديث رمز الإقران", &error, MB_ICONWARNING),
     }
 }
 
@@ -839,7 +839,7 @@ unsafe fn show_pairing_tutorial_window(owner: HWND) {
         SetForegroundWindow(existing);
         return;
     }
-    let title = wide("Codex额度 · 配对教学");
+    let title = wide("حصة Codex · شرح الإقران");
     let window = CreateWindowExW(
         WS_EX_TOOLWINDOW,
         class_name.as_ptr(),
@@ -855,7 +855,7 @@ unsafe fn show_pairing_tutorial_window(owner: HWND) {
         null(),
     );
     if window.is_null() {
-        show_message("无法显示配对教学", "无法创建配对教学窗口", MB_ICONWARNING);
+        show_message("تعذّر عرض شرح الإقران", "تعذّر إنشاء نافذة شرح الإقران", MB_ICONWARNING);
         return;
     }
     center_auxiliary_window(window, owner);
@@ -1033,11 +1033,11 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     DeleteObject(background);
     SetBkMode(dc, TRANSPARENT as i32);
     SetTextColor(dc, rgb(244, 248, 250));
-    draw_text(dc, "扫码配对", 0, 24, client.right, 62, 28, true);
+    draw_text(dc, "الإقران بالمسح", 0, 24, client.right, 62, 28, true);
     SetTextColor(dc, rgb(160, 176, 188));
     draw_text(
         dc,
-        "使用手机系统相机扫描",
+        "امسح بكاميرا الجوال",
         0,
         66,
         client.right,
@@ -1089,7 +1089,7 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     SetTextColor(dc, rgb(92, 224, 199));
     draw_text(
         dc,
-        "手机 Codex额度 → 设置 → 扫码",
+        "الجوال: حصة Codex ← الإعدادات ← المسح",
         guide_panel.left,
         470,
         guide_panel.right,
@@ -1100,7 +1100,7 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     SetTextColor(dc, rgb(176, 190, 199));
     draw_text(
         dc,
-        "同一局域网",
+        "نفس الشبكة",
         guide_panel.left,
         518,
         guide_panel.right,
@@ -1110,7 +1110,7 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     );
     draw_text(
         dc,
-        "首次使用：ChatGPT → 设置 → 钩子",
+        "أول مرة: ChatGPT ← الإعدادات ← Hooks",
         guide_panel.left,
         544,
         guide_panel.right,
@@ -1120,7 +1120,7 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     );
     draw_text(
         dc,
-        "信任全部钩子后重启 ChatGPT",
+        "وافق على كل الـ Hooks ثم أعد تشغيل ChatGPT",
         guide_panel.left,
         570,
         guide_panel.right,
@@ -1131,7 +1131,7 @@ unsafe fn paint_pairing_window_legacy(window: HWND) {
     SetTextColor(dc, rgb(120, 140, 151));
     draw_text(
         dc,
-        "二维码仅限本次配对，5 分钟内有效",
+        "الرمز لهذا الإقران فقط، وصالح لمدة 5 دقائق",
         20,
         614,
         client.right - 20,
@@ -1177,7 +1177,7 @@ unsafe fn paint_onboarding_window(window: HWND) {
     SetTextColor(dc, UI_PRIMARY);
     draw_text(
         dc,
-        "本地 Windows 客户端",
+        "برنامج ويندوز المحلي",
         28,
         24,
         client.right - 28,
@@ -1188,7 +1188,7 @@ unsafe fn paint_onboarding_window(window: HWND) {
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "在电脑上准备好同步",
+        "جهّز المزامنة على الكمبيوتر",
         28,
         52,
         client.right - 28,
@@ -1199,7 +1199,7 @@ unsafe fn paint_onboarding_window(window: HWND) {
     SetTextColor(dc, UI_MUTED);
     draw_multiline(
         dc,
-        "Codex额度将在可信局域网内把额度摘要和经过裁剪的任务状态同步到你的 Android 手机。",
+        "سيزامن البرنامج ملخص الحصة وحالة المهام المختصرة مع جوالك الأندرويد عبر شبكتك الموثوقة.",
         28,
         94,
         client.right - 28,
@@ -1224,7 +1224,7 @@ unsafe fn paint_onboarding_window(window: HWND) {
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "开始使用",
+        "ابدأ",
         steps.left + 18,
         steps.top + 16,
         steps.right - 18,
@@ -1236,30 +1236,30 @@ unsafe fn paint_onboarding_window(window: HWND) {
         dc,
         steps,
         1,
-        "安装任务 Hook",
-        "在 ChatGPT → 设置 → 钩子中审阅并信任全部钩子。",
+        "تثبيت Hook المهام",
+        "راجع ووافق على كل الـ Hooks من ChatGPT ← الإعدادات ← Hooks.",
         56,
     );
     draw_step(
         dc,
         steps,
         2,
-        "重启 ChatGPT",
-        "让已信任的 Hook 开始提供任务状态摘要。",
+        "أعد تشغيل ChatGPT",
+        "عشان تبدأ الـ Hooks الموثوقة بإرسال ملخص حالة المهام.",
         128,
     );
     draw_step(
         dc,
         steps,
         3,
-        "扫描配对二维码",
-        "在 Android 设置中使用系统相机连接此电脑。",
+        "امسح رمز الإقران",
+        "من إعدادات تطبيق الجوال، امسح الرمز لربط هذا الكمبيوتر.",
         200,
     );
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "服务状态",
+        "حالة الخدمة",
         status.left + 18,
         status.top + 16,
         status.right - 18,
@@ -1271,8 +1271,8 @@ unsafe fn paint_onboarding_window(window: HWND) {
         dc,
         status,
         "●",
-        "服务已运行",
-        "本地加密同步 · TLS 1.3",
+        "الخدمة تعمل",
+        "مزامنة محلية مشفّرة · TLS 1.3",
         UI_WAITING,
         58,
     );
@@ -1280,8 +1280,8 @@ unsafe fn paint_onboarding_window(window: HWND) {
         dc,
         status,
         "◌",
-        "仅可信局域网",
-        "不读取对话、命令或文件路径",
+        "شبكة موثوقة فقط",
+        "لا يقرأ المحادثات أو الأوامر أو مسارات الملفات",
         UI_PRIMARY,
         132,
     );
@@ -1289,8 +1289,8 @@ unsafe fn paint_onboarding_window(window: HWND) {
         dc,
         status,
         "✓",
-        "手机可随时撤销",
-        "托盘菜单中管理已配对设备",
+        "تقدر تلغي ربط الجوال بأي وقت",
+        "إدارة الأجهزة المربوطة من قائمة البرنامج",
         UI_MUTED,
         206,
     );
@@ -1437,11 +1437,11 @@ unsafe fn paint_diagnostics_window_legacy(window: HWND) {
     DeleteObject(background);
     SetBkMode(dc, TRANSPARENT as i32);
     SetTextColor(dc, UI_PRIMARY);
-    draw_text(dc, "本地诊断", 28, 24, client.right - 28, 46, 12, false);
+    draw_text(dc, "التشخيص المحلي", 28, 24, client.right - 28, 46, 12, false);
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "同步健康状态",
+        "صحة المزامنة",
         28,
         52,
         client.right - 250,
@@ -1452,7 +1452,7 @@ unsafe fn paint_diagnostics_window_legacy(window: HWND) {
     SetTextColor(dc, UI_MUTED);
     draw_multiline(
         dc,
-        "只显示版本、连接阶段、同步时间和错误代码；不包含对话或工具内容。",
+        "يعرض الإصدار ومرحلة الاتصال ووقت المزامنة ورموز الأخطاء فقط، بدون أي محادثات أو محتوى أدوات.",
         28,
         94,
         client.right - 28,
@@ -1475,27 +1475,27 @@ unsafe fn paint_diagnostics_window_legacy(window: HWND) {
     draw_surface(dc, right, UI_SURFACE, UI_BORDER, 18);
     let connections = APP.get().map(|app| app.active_connections()).unwrap_or(0);
     let phone = if connections > 0 {
-        "已连接"
+        "متصل"
     } else {
-        "未连接"
+        "غير متصل"
     };
     let hook = if hooks_installed() {
-        "已写入 · 等待 ChatGPT 信任"
+        "تمت الكتابة · بانتظار موافقة ChatGPT"
     } else {
-        "未安装"
+        "غير مثبّت"
     };
     draw_diag_item(
         dc,
         left,
-        "Windows 服务",
-        "运行中 · 局域网监听正常",
+        "خدمة ويندوز",
+        "تعمل · الاستماع على الشبكة سليم",
         UI_WAITING,
         22,
     );
     draw_diag_item(
         dc,
         left,
-        "Android 手机",
+        "جوال أندرويد",
         phone,
         if connections > 0 {
             UI_WAITING
@@ -1507,8 +1507,8 @@ unsafe fn paint_diagnostics_window_legacy(window: HWND) {
     draw_diag_item(
         dc,
         left,
-        "额度采集",
-        "监控中 · 每 5 秒刷新",
+        "جمع الحصة",
+        "مراقبة · تحديث كل 5 ثوانٍ",
         UI_PRIMARY,
         152,
     );
@@ -1527,19 +1527,19 @@ unsafe fn paint_diagnostics_window_legacy(window: HWND) {
     draw_diag_item(
         dc,
         right,
-        "任务摘要",
-        "处理中 / 需要授权 / 等待查看",
+        "ملخص المهام",
+        "قيد التنفيذ / تحتاج موافقة / بانتظار المراجعة",
         UI_RUNNING,
         87,
     );
     draw_diag_item(
         dc,
         right,
-        "启动设置",
+        "إعداد التشغيل",
         if startup_enabled() {
-            "登录 Windows 时自动启动"
+            "التشغيل تلقائياً عند الدخول لويندوز"
         } else {
-            "按需启动"
+            "تشغيل يدوي"
         },
         UI_MUTED,
         152,
@@ -1574,9 +1574,9 @@ unsafe fn draw_diag_item(dc: HDC, parent: RECT, title: &str, detail: &str, color
 
 fn phone_connection_label(active_connections: usize) -> &'static str {
     if active_connections > 0 {
-        "已连接"
+        "متصل"
     } else {
-        "未连接"
+        "غير متصل"
     }
 }
 
@@ -1585,19 +1585,19 @@ fn upstream_usage_label(
     confirmation_in_progress: bool,
 ) -> (&'static str, u32) {
     if confirmation_in_progress {
-        return ("同步中", UI_PRIMARY);
+        return ("جارٍ المزامنة", UI_PRIMARY);
     }
     match freshness.usage.status {
-        UpstreamFreshnessStatus::Current => ("已同步", UI_WAITING),
-        UpstreamFreshnessStatus::Cached => ("缓存", UI_CACHED),
-        UpstreamFreshnessStatus::Unavailable => ("待同步", UI_CACHED),
+        UpstreamFreshnessStatus::Current => ("تمت المزامنة", UI_WAITING),
+        UpstreamFreshnessStatus::Cached => ("مخزّن مؤقتاً", UI_CACHED),
+        UpstreamFreshnessStatus::Unavailable => ("بانتظار المزامنة", UI_CACHED),
     }
 }
 
 fn tray_quota_labels(quota: &QuotaSnapshot) -> [String; 2] {
     [
-        tray_quota_label(quota, "five_hour", 300, "5小时额度"),
-        tray_quota_label(quota, "weekly", 10_080, "周额度"),
+        tray_quota_label(quota, "five_hour", 300, "حصة 5 ساعات"),
+        tray_quota_label(quota, "weekly", 10_080, "الحصة الأسبوعية"),
     ]
 }
 
@@ -1651,31 +1651,31 @@ fn upstream_usage_detail(
 fn elapsed_age_label(elapsed_ms: u64) -> String {
     let elapsed_minutes = elapsed_ms / 60_000;
     match elapsed_minutes {
-        0 => "刚刚".to_string(),
-        1..=59 => format!("{elapsed_minutes}分"),
-        60..=1_439 => format!("{}小时", elapsed_minutes / 60),
-        1_440..=10_079 => format!("{}天", elapsed_minutes / (24 * 60)),
-        10_080..=1_007_999 => format!("{}周", elapsed_minutes / (7 * 24 * 60)),
-        _ => "99周+".to_string(),
+        0 => "الآن".to_string(),
+        1..=59 => format!("{elapsed_minutes} د"),
+        60..=1_439 => format!("{} س", elapsed_minutes / 60),
+        1_440..=10_079 => format!("{} يوم", elapsed_minutes / (24 * 60)),
+        10_080..=1_007_999 => format!("{} أسبوع", elapsed_minutes / (7 * 24 * 60)),
+        _ => "+99 أسبوع".to_string(),
     }
 }
 
 fn upstream_confirmation_guidance(error: Option<UpstreamConfirmationErrorCode>) -> &'static str {
     match error {
-        None => "区分本地连接与额度上游确认状态",
+        None => "يفصل بين الاتصال المحلي وحالة التحقق من الحصة",
         Some(UpstreamConfirmationErrorCode::AuthUnavailable) => {
-            "最近确认失败 AUTH_UNAVAILABLE：请重新登录 Codex"
+            "فشل آخر تحقق AUTH_UNAVAILABLE: سجّل دخولك في Codex من جديد"
         }
         Some(UpstreamConfirmationErrorCode::AuthRejected) => {
-            "最近确认失败 AUTH_REJECTED：请重新登录 Codex"
+            "فشل آخر تحقق AUTH_REJECTED: سجّل دخولك في Codex من جديد"
         }
-        Some(UpstreamConfirmationErrorCode::Network) => "最近确认失败 NETWORK：检查网络或代理",
+        Some(UpstreamConfirmationErrorCode::Network) => "فشل آخر تحقق NETWORK: تحقق من الإنترنت أو البروكسي",
         Some(UpstreamConfirmationErrorCode::ResponseFormat) => {
-            "最近确认失败 RESPONSE_FORMAT：请导出本地诊断"
+            "فشل آخر تحقق RESPONSE_FORMAT: صدّر التشخيص المحلي"
         }
-        Some(UpstreamConfirmationErrorCode::UpstreamHttp) => "最近确认失败 UPSTREAM_HTTP：稍后重试",
+        Some(UpstreamConfirmationErrorCode::UpstreamHttp) => "فشل آخر تحقق UPSTREAM_HTTP: حاول لاحقاً",
         Some(UpstreamConfirmationErrorCode::LocalWrite) => {
-            "最近确认失败 LOCAL_WRITE：请导出本地诊断"
+            "فشل آخر تحقق LOCAL_WRITE: صدّر التشخيص المحلي"
         }
     }
 }
@@ -1708,7 +1708,7 @@ unsafe fn paint_diagnostics_window(window: HWND) {
     DeleteObject(background);
     SetBkMode(dc, TRANSPARENT as i32);
     SetTextColor(dc, UI_INK);
-    draw_text(dc, "连接诊断", 24, 24, client.right - 24, 54, 21, false);
+    draw_text(dc, "تشخيص الاتصال", 24, 24, client.right - 24, 54, 21, false);
     let diagnostic_guidance = APP
         .get()
         .and_then(|app| app.last_upstream_confirmation_error());
@@ -1735,11 +1735,11 @@ unsafe fn paint_diagnostics_window(window: HWND) {
         .is_some_and(|app| app.upstream_confirmation_in_progress());
     let (upstream_label, upstream_color) =
         upstream_usage_detail(&upstream, confirmation_in_progress, Utc::now());
-    draw_minimal_diagnostic_row(dc, panel, "Windows 服务", "运行中", UI_WAITING, 0);
+    draw_minimal_diagnostic_row(dc, panel, "خدمة ويندوز", "تعمل", UI_WAITING, 0);
     draw_minimal_diagnostic_row(
         dc,
         panel,
-        "Android 手机",
+        "جوال أندرويد",
         phone_connection_label(connections),
         if connections > 0 {
             UI_WAITING
@@ -1751,7 +1751,7 @@ unsafe fn paint_diagnostics_window(window: HWND) {
     draw_minimal_diagnostic_row(
         dc,
         panel,
-        "Codex 额度源",
+        "مصدر حصة Codex",
         &upstream_label,
         upstream_color,
         2,
@@ -1762,9 +1762,9 @@ unsafe fn paint_diagnostics_window(window: HWND) {
     draw_text(
         dc,
         if confirmation_in_progress {
-            "确认中…"
+            "جارٍ التحقق…"
         } else {
-            "立即确认"
+            "تحقق الآن"
         },
         button.left,
         button.top - 1,
@@ -1926,7 +1926,7 @@ unsafe fn paint_pairing_window(window: HWND) {
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "连接手机",
+        "ربط الجوال",
         0,
         27,
         client.right,
@@ -2003,9 +2003,9 @@ unsafe fn paint_pairing_window(window: HWND) {
     draw_text(
         dc,
         if data.manual_discovery_available {
-            "无法扫码？输入下方 6 位配对码"
+            "ما تقدر تمسح؟ أدخل رمز الإقران المكوّن من 6 أرقام بالأسفل"
         } else {
-            "局域网发现不可用，请使用二维码"
+            "البحث في الشبكة غير متاح، استخدم رمز QR"
         },
         bottom_layout.manual_guidance.left,
         bottom_layout.manual_guidance.top,
@@ -2033,9 +2033,9 @@ unsafe fn paint_pairing_window(window: HWND) {
     draw_text(
         dc,
         &if data.manual_discovery_available {
-            format!("安全校验码 {} · 5 分钟内有效", data.security_code)
+            format!("رمز التحقق {} · صالح لمدة 5 دقائق", data.security_code)
         } else {
-            "关闭窗口后重试，或直接扫码".to_string()
+            "اقفل النافذة وحاول مرة ثانية، أو امسح الرمز مباشرة".to_string()
         },
         bottom_layout.security_code.left,
         bottom_layout.security_code.top,
@@ -2098,7 +2098,7 @@ unsafe fn paint_pairing_tutorial_window(window: HWND) {
     SetBkMode(dc, TRANSPARENT as i32);
 
     SetTextColor(dc, UI_INK);
-    draw_text(dc, "配对教学", 24, 14, client.right - 64, 46, 21, false);
+    draw_text(dc, "شرح الإقران", 24, 14, client.right - 64, 46, 21, false);
     let close = pairing_tutorial_header_close_button_rect(client);
     draw_surface(dc, close, UI_SURFACE, UI_BORDER, 16);
     draw_close_icon(dc, close);
@@ -2122,7 +2122,7 @@ unsafe fn paint_pairing_tutorial_window(window: HWND) {
     SetTextColor(dc, UI_SURFACE);
     draw_text(
         dc,
-        "我知道了",
+        "فهمت",
         button.left,
         button.top - 1,
         button.right,
@@ -2175,7 +2175,7 @@ unsafe fn paint_pairing_window_compact(window: HWND) {
     SetTextColor(dc, UI_PRIMARY);
     draw_text(
         dc,
-        "连接 Android 手机",
+        "ربط جوال أندرويد",
         30,
         28,
         client.right - 320,
@@ -2186,7 +2186,7 @@ unsafe fn paint_pairing_window_compact(window: HWND) {
     SetTextColor(dc, UI_MUTED);
     draw_text(
         dc,
-        "使用手机系统相机扫描二维码",
+        "امسح رمز QR بكاميرا الجوال",
         30,
         67,
         client.right - 320,
@@ -2204,7 +2204,7 @@ unsafe fn paint_pairing_window_compact(window: HWND) {
     SetTextColor(dc, UI_INK);
     draw_text(
         dc,
-        "请在 Android 中打开",
+        "افتح في الجوال",
         guide.left + 18,
         guide.top + 20,
         guide.right - 18,
@@ -2215,7 +2215,7 @@ unsafe fn paint_pairing_window_compact(window: HWND) {
     SetTextColor(dc, UI_MUTED);
     draw_multiline(
         dc,
-        "Codex额度 → 设置 → 扫码连接电脑\n\n二维码仅用于本次配对，5 分钟内有效。\n手机和电脑需要处于同一可信局域网。",
+        "حصة Codex ← الإعدادات ← ربط الكمبيوتر\n\nالرمز لهذا الإقران فقط، وصالح لمدة 5 دقائق.\nلازم يكون الجوال والكمبيوتر على نفس الشبكة الموثوقة.",
         guide.left + 18,
         guide.top + 58,
         guide.right - 18,
@@ -2257,7 +2257,7 @@ unsafe fn paint_pairing_window_compact(window: HWND) {
     SetTextColor(dc, UI_MUTED);
     draw_text(
         dc,
-        "等待手机扫描 · 5 分钟内有效",
+        "بانتظار مسح الجوال · صالح لمدة 5 دقائق",
         qr_outer.left,
         qr_outer.bottom + 16,
         client.right - 24,
@@ -2487,7 +2487,7 @@ fn set_startup_enabled(enabled: bool) -> Result<(), String> {
             null_mut(),
         ) != ERROR_SUCCESS
         {
-            return Err("无法打开当前用户启动项".to_string());
+            return Err("تعذّر فتح عناصر بدء التشغيل للمستخدم".to_string());
         }
         let name = wide("CodexQuota");
         let result = if enabled {
@@ -2508,7 +2508,7 @@ fn set_startup_enabled(enabled: bool) -> Result<(), String> {
         if result == ERROR_SUCCESS || (!enabled && result == ERROR_FILE_NOT_FOUND) {
             mark_startup_preference_configured()
         } else {
-            Err(format!("Windows 注册表返回错误 {result}"))
+            Err(format!("سجل ويندوز أرجع الخطأ {result}"))
         }
     }
 }
@@ -2557,7 +2557,7 @@ fn mark_startup_preference_configured() -> Result<(), String> {
             null_mut(),
         ) != ERROR_SUCCESS
         {
-            return Err("无法保存自动启动偏好".to_string());
+            return Err("تعذّر حفظ إعداد التشغيل التلقائي".to_string());
         }
         let name = wide("StartupPreferenceConfigured");
         let configured = 1_u32;
@@ -2573,7 +2573,7 @@ fn mark_startup_preference_configured() -> Result<(), String> {
         if result == ERROR_SUCCESS {
             Ok(())
         } else {
-            Err(format!("Windows 注册表返回错误 {result}"))
+            Err(format!("سجل ويندوز أرجع الخطأ {result}"))
         }
     }
 }
@@ -2654,11 +2654,11 @@ fn ingest_hook_event() -> Result<(), String> {
     std::io::stdin()
         .take(MAX_RAW_HOOK_EVENT_BYTES + 1)
         .read_to_end(&mut raw_event)
-        .map_err(|error| format!("无法读取 Hook 事件：{error}"))?;
+        .map_err(|error| format!("تعذّر قراءة حدث الـ Hook: {error}"))?;
     if raw_event.len() as u64 > MAX_RAW_HOOK_EVENT_BYTES {
-        return Err("Hook 事件过大".to_string());
+        return Err("حدث الـ Hook كبير جداً".to_string());
     }
-    let raw_event = String::from_utf8(raw_event).map_err(|_| "Hook 事件不是 UTF-8".to_string())?;
+    let raw_event = String::from_utf8(raw_event).map_err(|_| "حدث الـ Hook ليس بترميز UTF-8".to_string())?;
     let thread_index_path = hooks_config_path()?.with_file_name("session_index.jsonl");
     HookEventSpool::with_thread_index(data_directory.join("hook-events-v1"), thread_index_path)
         .enqueue_json(&raw_event, observed_at_ms)
@@ -2678,14 +2678,14 @@ fn install_hook_config() -> Result<(), String> {
     let existing = match std::fs::read_to_string(&path) {
         Ok(existing) => existing,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => "{}".to_string(),
-        Err(error) => return Err(format!("无法读取 {}：{error}", path.display())),
+        Err(error) => return Err(format!("تعذّر قراءة {}: {error}", path.display())),
     };
     let merged = merge_hook_config(&existing, &command, &command_windows)?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
     }
     std::fs::write(&path, format!("{merged}\n"))
-        .map_err(|error| format!("无法写入 {}：{error}", path.display()))
+        .map_err(|error| format!("تعذّر كتابة {}: {error}", path.display()))
 }
 
 fn uninstall_hook_config() -> Result<(), String> {
@@ -2693,11 +2693,11 @@ fn uninstall_hook_config() -> Result<(), String> {
     let existing = match std::fs::read_to_string(&path) {
         Ok(existing) => existing,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(format!("无法读取 {}：{error}", path.display())),
+        Err(error) => return Err(format!("تعذّر قراءة {}: {error}", path.display())),
     };
     let remaining = remove_hook_config(&existing)?;
     std::fs::write(&path, format!("{remaining}\n"))
-        .map_err(|error| format!("无法写入 {}：{error}", path.display()))
+        .map_err(|error| format!("تعذّر كتابة {}: {error}", path.display()))
 }
 
 fn hooks_config_path() -> Result<PathBuf, String> {
@@ -2707,14 +2707,14 @@ fn hooks_config_path() -> Result<PathBuf, String> {
     std::env::var_os("USERPROFILE")
         .map(PathBuf::from)
         .map(|path| path.join(".codex").join("hooks.json"))
-        .ok_or_else(|| "无法定位 Codex 配置目录".to_string())
+        .ok_or_else(|| "تعذّر العثور على مجلد إعدادات Codex".to_string())
 }
 
 fn data_directory() -> Result<PathBuf, String> {
     std::env::var_os("LOCALAPPDATA")
         .map(PathBuf::from)
         .map(|path| path.join("CodexQuota").join("0.4.0"))
-        .ok_or_else(|| "无法定位 LOCALAPPDATA".to_string())
+        .ok_or_else(|| "تعذّر العثور على LOCALAPPDATA".to_string())
 }
 
 fn start_quota_monitor(
@@ -2925,15 +2925,15 @@ mod ui_contract_tests {
 
     #[test]
     fn diagnostics_reports_observable_phone_and_upstream_states() {
-        assert_eq!(phone_connection_label(0), "未连接");
-        assert_eq!(phone_connection_label(1), "已连接");
+        assert_eq!(phone_connection_label(0), "غير متصل");
+        assert_eq!(phone_connection_label(1), "متصل");
         let mut freshness = UpstreamFreshness::default();
-        assert_eq!(upstream_usage_label(&freshness, false).0, "待同步");
+        assert_eq!(upstream_usage_label(&freshness, false).0, "بانتظار المزامنة");
         freshness.usage.status = UpstreamFreshnessStatus::Cached;
-        assert_eq!(upstream_usage_label(&freshness, false).0, "缓存");
+        assert_eq!(upstream_usage_label(&freshness, false).0, "مخزّن مؤقتاً");
         freshness.usage.status = UpstreamFreshnessStatus::Current;
-        assert_eq!(upstream_usage_label(&freshness, false).0, "已同步");
-        assert_eq!(upstream_usage_label(&freshness, true).0, "同步中");
+        assert_eq!(upstream_usage_label(&freshness, false).0, "تمت المزامنة");
+        assert_eq!(upstream_usage_label(&freshness, true).0, "جارٍ المزامنة");
     }
 
     #[test]
@@ -2943,23 +2943,23 @@ mod ui_contract_tests {
 
     #[test]
     fn diagnostics_cache_age_uses_the_shared_minute_hour_day_and_week_units() {
-        assert_eq!(elapsed_age_label(0), "刚刚");
-        assert_eq!(elapsed_age_label(59 * 60_000), "59分");
-        assert_eq!(elapsed_age_label(415 * 60_000), "6小时");
-        assert_eq!(elapsed_age_label(3 * 24 * 60 * 60_000), "3天");
-        assert_eq!(elapsed_age_label(9 * 24 * 60 * 60_000), "1周");
-        assert_eq!(elapsed_age_label(800 * 24 * 60 * 60_000), "99周+");
+        assert_eq!(elapsed_age_label(0), "الآن");
+        assert_eq!(elapsed_age_label(59 * 60_000), "59 د");
+        assert_eq!(elapsed_age_label(415 * 60_000), "6 س");
+        assert_eq!(elapsed_age_label(3 * 24 * 60 * 60_000), "3 يوم");
+        assert_eq!(elapsed_age_label(9 * 24 * 60 * 60_000), "1 أسبوع");
+        assert_eq!(elapsed_age_label(800 * 24 * 60 * 60_000), "+99 أسبوع");
     }
 
     #[test]
     fn diagnostics_exposes_only_safe_upstream_confirmation_guidance() {
         assert_eq!(
             upstream_confirmation_guidance(Some(UpstreamConfirmationErrorCode::AuthRejected)),
-            "最近确认失败 AUTH_REJECTED：请重新登录 Codex"
+            "فشل آخر تحقق AUTH_REJECTED: سجّل دخولك في Codex من جديد"
         );
         assert_eq!(
             upstream_confirmation_guidance(Some(UpstreamConfirmationErrorCode::Network)),
-            "最近确认失败 NETWORK：检查网络或代理"
+            "فشل آخر تحقق NETWORK: تحقق من الإنترنت أو البروكسي"
         );
         assert!(
             !upstream_confirmation_guidance(Some(UpstreamConfirmationErrorCode::ResponseFormat))
@@ -2991,7 +2991,7 @@ mod ui_contract_tests {
     #[test]
     fn tray_menu_shows_five_hour_and_weekly_quota() {
         let mut quota = unavailable_payload().quota;
-        assert_eq!(tray_quota_labels(&quota), ["5小时额度 --", "周额度 --"]);
+        assert_eq!(tray_quota_labels(&quota), ["حصة 5 ساعات --", "الحصة الأسبوعية --"]);
         quota.windows = vec![
             codex_quota_windows_core::QuotaWindow {
                 id: "five-hour".to_string(),
@@ -3011,7 +3011,7 @@ mod ui_contract_tests {
             },
         ];
 
-        assert_eq!(tray_quota_labels(&quota), ["5小时额度 68%", "周额度 81%"]);
+        assert_eq!(tray_quota_labels(&quota), ["حصة 5 ساعات 68%", "الحصة الأسبوعية 81%"]);
     }
 
     #[test]
@@ -3026,7 +3026,7 @@ mod ui_contract_tests {
             status: codex_quota_windows_core::QuotaWindowStatus::Current,
         }];
 
-        assert_eq!(tray_quota_labels(&quota)[0], "5小时额度 --");
+        assert_eq!(tray_quota_labels(&quota)[0], "حصة 5 ساعات --");
     }
 
     #[test]
@@ -3038,22 +3038,22 @@ mod ui_contract_tests {
         );
         assert_eq!((PAIRING_GUIDANCE_SIZE, PAIRING_CODE_SIZE), (13, 22));
         assert_eq!((PAIRING_QR_SIZE, PAIRING_QR_TOP), (286, 96));
-        assert_eq!(PAIRING_HOOK_GUIDANCE, "使用手机端「Codex额度」App 扫码");
-        assert_eq!(PAIRING_APP_GUIDANCE, "打开 App → 设置 → 连接电脑");
-        assert_eq!(PAIRING_NETWORK_GUIDANCE, "确保手机和电脑连接同一局域网");
-        assert_eq!(PAIRING_TUTORIAL_BUTTON_LABEL, "配对教学");
+        assert_eq!(PAIRING_HOOK_GUIDANCE, "امسح الرمز بتطبيق «حصة Codex» في الجوال");
+        assert_eq!(PAIRING_APP_GUIDANCE, "افتح التطبيق ← الإعدادات ← ربط الكمبيوتر");
+        assert_eq!(PAIRING_NETWORK_GUIDANCE, "تأكد أن الجوال والكمبيوتر على نفس الشبكة");
+        assert_eq!(PAIRING_TUTORIAL_BUTTON_LABEL, "شرح الإقران");
         assert_eq!(
             PAIRING_TUTORIAL_STEPS,
             [
-                "1. 在电脑托盘菜单中选择「安装/修复任务 Hook」",
-                "2. 在 ChatGPT 中打开「设置 → 钩子」，并信任全部钩子",
-                "3. 在手机端打开「Codex额度」App，进入「设置 → 连接电脑」",
-                "4. 扫描二维码或输入 6 位配对码完成配对",
+                "1. من قائمة البرنامج في شريط المهام اختر «تثبيت/إصلاح Hook المهام»",
+                "2. في ChatGPT افتح «الإعدادات ← Hooks» ووافق على كل الـ Hooks",
+                "3. في الجوال افتح تطبيق «حصة Codex» ثم «الإعدادات ← ربط الكمبيوتر»",
+                "4. امسح رمز QR أو أدخل رمز الإقران المكوّن من 6 أرقام",
             ]
         );
         assert_eq!(
             HOOK_INSTALLED_GUIDANCE,
-            "任务 Hook 已安装或修复。\n请在 ChatGPT 中打开「设置 → 钩子」，并信任全部钩子。"
+            "تم تثبيت أو إصلاح Hook المهام.\nافتح في ChatGPT «الإعدادات ← Hooks» ووافق على كل الـ Hooks."
         );
     }
 

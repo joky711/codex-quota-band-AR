@@ -161,11 +161,11 @@ pub enum DirectResetRefreshError {
 impl std::fmt::Display for DirectResetRefreshError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::CredentialsUnavailable => formatter.write_str("Codex 凭证不可用"),
-            Self::Unauthorized => formatter.write_str("Codex 凭证已失效或授权请求被拒绝"),
-            Self::RequestFailed => formatter.write_str("无法请求 Codex 重置卡信息"),
-            Self::ResponseFormatChanged => formatter.write_str("Codex 重置卡响应格式已变化"),
-            Self::HttpStatus(status) => write!(formatter, "Codex 重置卡请求返回 HTTP {status}"),
+            Self::CredentialsUnavailable => formatter.write_str("بيانات دخول Codex غير متاحة"),
+            Self::Unauthorized => formatter.write_str("بيانات دخول Codex منتهية أو تم رفض الطلب"),
+            Self::RequestFailed => formatter.write_str("تعذّر طلب معلومات بطاقات إعادة التعيين"),
+            Self::ResponseFormatChanged => formatter.write_str("تغيّر شكل رد بطاقات إعادة التعيين"),
+            Self::HttpStatus(status) => write!(formatter, "طلب بطاقات إعادة التعيين أرجع HTTP {status}"),
         }
     }
 }
