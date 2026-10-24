@@ -66,9 +66,9 @@ test("built Band 10 page uses two vertically swipable pages with one accent dot 
       ...pageExports.default.private,
       hasTaskItems: true,
       taskItems: [
-        { title: "允许写入文件", statusText: "需要授权", tone: "danger", showDivider: true, timeText: "1分" },
-        { title: "构建安装包", statusText: "处理中", tone: "running", showDivider: true, timeText: "25分" },
-        { title: "检查手环页面", statusText: "等待查看", tone: "waiting", showDivider: false, timeText: "11小时" },
+        { title: "允许写入文件", statusText: "تحتاج إذن", tone: "danger", showDivider: true, timeText: "1 د" },
+        { title: "构建安装包", statusText: "قيد التنفيذ", tone: "running", showDivider: true, timeText: "25 د" },
+        { title: "检查手环页面", statusText: "للمراجعة", tone: "waiting", showDivider: false, timeText: "11 س" },
       ],
     });
     const tags = collectTags(frame);

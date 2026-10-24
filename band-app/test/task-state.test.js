@@ -7,10 +7,10 @@ const taskState = require("../src/common/task-state.cjs");
 
 test("band task view uses the confirmed compact relative-time labels", () => {
   const now = new Date("2030-01-04T12:00:00.000Z");
-  assert.equal(taskState.relativeTimeText(now.getTime() - 60_000, now), "1分");
-  assert.equal(taskState.relativeTimeText(now.getTime() - 25 * 60_000, now), "25分");
-  assert.equal(taskState.relativeTimeText(now.getTime() - 11 * 3_600_000, now), "11小时");
-  assert.equal(taskState.relativeTimeText(now.getTime() - 3 * 86_400_000, now), "3天");
+  assert.equal(taskState.relativeTimeText(now.getTime() - 60_000, now), "1 د");
+  assert.equal(taskState.relativeTimeText(now.getTime() - 25 * 60_000, now), "25 د");
+  assert.equal(taskState.relativeTimeText(now.getTime() - 11 * 3_600_000, now), "11 س");
+  assert.equal(taskState.relativeTimeText(now.getTime() - 3 * 86_400_000, now), "3 ي");
 });
 
 test("band task view shows only task state and time without tool activity", () => {
@@ -41,13 +41,13 @@ test("band task view shows only task state and time without tool activity", () =
     now,
   );
 
-  assert.equal(view.summaryText, "3项任务");
+  assert.equal(view.summaryText, "3 مهام");
   assert.deepEqual(
     view.items.map(({ statusText, tone, timeText }) => ({ statusText, tone, timeText })),
     [
-      { statusText: "需要授权", tone: "danger", timeText: "1分" },
-      { statusText: "处理中", tone: "running", timeText: "25分" },
-      { statusText: "等待查看", tone: "waiting", timeText: "11小时" },
+      { statusText: "تحتاج إذن", tone: "danger", timeText: "1 د" },
+      { statusText: "قيد التنفيذ", tone: "running", timeText: "25 د" },
+      { statusText: "للمراجعة", tone: "waiting", timeText: "11 س" },
     ],
   );
 });
@@ -77,9 +77,9 @@ test("band task view puts authorization first and exposes compact status groups 
       showGroup,
     })),
     [
-      { title: "确认写入", tone: "danger", groupText: "需要授权", groupTone: "danger", groupCount: "1", showGroup: true },
-      { title: "构建 RPK", tone: "running", groupText: "处理中", groupTone: "running", groupCount: "1", showGroup: true },
-      { title: "等待验收", tone: "waiting", groupText: "等待查看", groupTone: "waiting", groupCount: "1", showGroup: true },
+      { title: "确认写入", tone: "danger", groupText: "تحتاج إذن", groupTone: "danger", groupCount: "1", showGroup: true },
+      { title: "构建 RPK", tone: "running", groupText: "قيد التنفيذ", groupTone: "running", groupCount: "1", showGroup: true },
+      { title: "等待验收", tone: "waiting", groupText: "للمراجعة", groupTone: "waiting", groupCount: "1", showGroup: true },
     ],
   );
 });
@@ -111,12 +111,12 @@ test("band task sanitizer rejects oversized or privacy-expanded payloads", () =>
 
 test("empty and unavailable task states stay explicit", () => {
   assert.deepEqual(taskState.createTaskView(null), {
-    summaryText: "任务状态不可用",
+    summaryText: "المهام غير متاحة",
     items: [],
   });
   assert.equal(
     taskState.createTaskView({ generatedAtMs: 1, chatGptState: "running", tasks: [] })
       .summaryText,
-    "暂无任务",
+    "لا توجد مهام",
   );
 });

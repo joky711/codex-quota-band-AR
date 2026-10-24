@@ -91,7 +91,7 @@ fn runtime_refreshes_a_generic_title_when_the_index_arrives_without_a_new_hook_e
         .poll(&spool, 1_100, false)
         .expect("initial poll")
         .expect("initial snapshot");
-    assert_eq!(first.tasks[0].title, "任务");
+    assert_eq!(first.tasks[0].title, "مهمة");
 
     fs::write(
         &index_path,
@@ -140,7 +140,7 @@ fn hook_spool_persists_only_the_sanitized_task_update() {
     let updates = spool.drain_updates().expect("drain task updates");
     assert_eq!(updates.len(), 1);
     assert_eq!(updates[0].conversation_id, "session-42");
-    assert_eq!(updates[0].title, "任务");
+    assert_eq!(updates[0].title, "مهمة");
     assert_eq!(updates[0].state, TaskState::Running);
     assert!(
         fs::read_dir(&directory)

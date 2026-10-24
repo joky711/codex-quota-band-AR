@@ -21,7 +21,7 @@ function v2Snapshot(overrides = {}) {
 test("band accepts the Android v2 summary without card identity and shows a compact expiry date", () => {
   const view = quotaState.createBandView(v2Snapshot(), new Date("2030-01-01T00:00:00Z"));
   assert.equal(view.resetCountText, "1");
-  assert.equal(view.resetExpiryText, "1月4日到期");
+  assert.equal(view.resetExpiryText, "ينتهي 4/1");
 });
 
 test("available reset color is independent from weekly quota color", () => {
@@ -77,7 +77,7 @@ test("five-hour and weekly quotas stay independent in the band view", () => {
   );
 
   assert.equal(view.fiveHourRemainingText, "68%");
-  assert.equal(view.fiveHourResetText, "18:20重置");
+  assert.equal(view.fiveHourResetText, "يتجدد 18:20");
   assert.equal(view.fiveHourTone, "healthy");
   assert.equal(view.quotaRemainingText, "34%");
   assert.equal(view.weeklyProgressPercent, 34);
@@ -113,20 +113,20 @@ test("five-hour quota distinguishes pending data from an absent window", () => {
   );
 
   assert.equal(pending.fiveHourRemainingText, "--");
-  assert.equal(pending.fiveHourResetText, "待同步");
+  assert.equal(pending.fiveHourResetText, "بانتظار المزامنة");
   assert.equal(pending.quotaRemainingText, "--", "the five-hour window must not fill the weekly slot");
   assert.equal(missing.fiveHourRemainingText, "--");
-  assert.equal(missing.fiveHourResetText, "暂无数据");
+  assert.equal(missing.fiveHourResetText, "لا بيانات");
   assert.equal(fiveHourOnly.quotaRemainingText, "--", "a current five-hour window still must not fill the weekly slot");
 });
 
 test("cache ages use the shared minute, hour, day, and week units", () => {
-  assert.equal(quotaState.formatElapsedAge(0), "刚刚");
-  assert.equal(quotaState.formatElapsedAge(59 * 60_000), "59分");
-  assert.equal(quotaState.formatElapsedAge(415 * 60_000), "6小时");
-  assert.equal(quotaState.formatElapsedAge(3 * 24 * 60 * 60_000), "3天");
-  assert.equal(quotaState.formatElapsedAge(9 * 24 * 60 * 60_000), "1周");
-  assert.equal(quotaState.formatElapsedAge(800 * 24 * 60 * 60_000), "99周+");
+  assert.equal(quotaState.formatElapsedAge(0), "الآن");
+  assert.equal(quotaState.formatElapsedAge(59 * 60_000), "59 د");
+  assert.equal(quotaState.formatElapsedAge(415 * 60_000), "6 س");
+  assert.equal(quotaState.formatElapsedAge(3 * 24 * 60 * 60_000), "3 ي");
+  assert.equal(quotaState.formatElapsedAge(9 * 24 * 60 * 60_000), "1 أ");
+  assert.equal(quotaState.formatElapsedAge(800 * 24 * 60 * 60_000), "+99 أ");
 });
 
 test("band rejects private fields, invalid timestamps, and oversized reset lists", () => {

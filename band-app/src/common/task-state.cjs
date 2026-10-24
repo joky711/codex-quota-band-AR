@@ -43,23 +43,23 @@ function sanitizeTaskSnapshotForBand(value) {
 function relativeTimeText(updatedAtMs, now = new Date()) {
   const elapsedMs = Math.max(0, now.getTime() - updatedAtMs)
   const minutes = Math.floor(elapsedMs / 60000)
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes}分`
+  if (minutes < 1) return 'الآن'
+  if (minutes < 60) return `${minutes} د`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}小时`
-  return `${Math.floor(hours / 24)}天`
+  if (hours < 24) return `${hours} س`
+  return `${Math.floor(hours / 24)} ي`
 }
 
 function taskStatusView(task) {
   if (task.state === 'needs_authorization') {
-    return { statusText: '需要授权', groupText: '需要授权', tone: 'danger', order: 0 }
+    return { statusText: 'تحتاج إذن', groupText: 'تحتاج إذن', tone: 'danger', order: 0 }
   }
   if (task.state === 'waiting_for_review') {
-    return { statusText: '等待查看', groupText: '等待查看', tone: 'waiting', order: 2 }
+    return { statusText: 'للمراجعة', groupText: 'للمراجعة', tone: 'waiting', order: 2 }
   }
   return {
-    statusText: '处理中',
-    groupText: '处理中',
+    statusText: 'قيد التنفيذ',
+    groupText: 'قيد التنفيذ',
     tone: 'running',
     order: 1
   }
@@ -67,14 +67,14 @@ function taskStatusView(task) {
 
 function createTaskView(snapshot, now = new Date()) {
   if (!snapshot) {
-    return { summaryText: '任务状态不可用', items: [] }
+    return { summaryText: 'المهام غير متاحة', items: [] }
   }
   const sanitized = sanitizeTaskSnapshotForBand(snapshot)
-  let summaryText = `${sanitized.tasks.length}项任务`
-  if (sanitized.chatGptState === 'not_running') summaryText = 'ChatGPT 未运行'
-  if (sanitized.chatGptState === 'hook_unavailable') summaryText = '任务状态不可用'
+  let summaryText = `${sanitized.tasks.length} مهام`
+  if (sanitized.chatGptState === 'not_running') summaryText = 'ChatGPT مطفأ'
+  if (sanitized.chatGptState === 'hook_unavailable') summaryText = 'المهام غير متاحة'
   if (sanitized.chatGptState === 'running' && sanitized.tasks.length === 0) {
-    summaryText = '暂无任务'
+    summaryText = 'لا توجد مهام'
   }
   const orderedItems = sanitized.tasks
     .map((task) => {

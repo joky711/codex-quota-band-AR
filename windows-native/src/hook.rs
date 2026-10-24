@@ -201,7 +201,7 @@ impl HookEventSpool {
         let title_override = self
             .thread_index_path
             .as_ref()
-            .map(|_| indexed_title.as_deref().unwrap_or("任务"));
+            .map(|_| indexed_title.as_deref().unwrap_or("مهمة"));
         let update = TaskReducer::new()
             .ingest_json_with_title(raw_event, observed_at_ms, title_override)
             .map_err(HookSpoolError::InvalidEvent)?;
@@ -291,7 +291,7 @@ impl HookEventSpool {
             .filter_map(|line| serde_json::from_str::<ThreadIndexRecord>(line).ok())
         {
             let title = crate::sanitize_title(&record.thread_name);
-            if title != "任务" {
+            if title != "مهمة" {
                 titles.insert(record.id, title);
             }
         }

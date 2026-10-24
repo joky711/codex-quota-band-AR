@@ -922,14 +922,14 @@ impl TaskReducer {
         };
         let title = indexed_title
             .map(sanitize_title)
-            .filter(|title| title != "任务")
+            .filter(|title| title != "مهمة")
             .or_else(|| {
                 self.tasks
                     .get(&event.session_id)
-                    .filter(|task| task.title != "任务")
+                    .filter(|task| task.title != "مهمة")
                     .map(|task| task.title.clone())
             })
-            .unwrap_or_else(|| "任务".to_string());
+            .unwrap_or_else(|| "مهمة".to_string());
         let update = TaskUpdate {
             conversation_id: event.session_id,
             turn_id: event.turn_id,
@@ -957,7 +957,7 @@ impl TaskReducer {
             if existing.updated_at_ms > update.updated_at_ms {
                 return Ok(None);
             }
-            if update.title == "任务" && existing.title != "任务" {
+            if update.title == "مهمة" && existing.title != "مهمة" {
                 update.title = existing.title.clone();
             }
         }
@@ -972,13 +972,13 @@ impl TaskReducer {
             return false;
         }
         let title = sanitize_title(indexed_title);
-        if title == "任务" {
+        if title == "مهمة" {
             return false;
         }
         let Some(task) = self.tasks.get_mut(conversation_id) else {
             return false;
         };
-        if task.title != "任务" {
+        if task.title != "مهمة" {
             return false;
         }
         task.title = title;
@@ -1002,7 +1002,7 @@ fn sanitize_title(candidate: &str) -> String {
         .join(" ");
     let title: String = safe_text.chars().take(16).collect();
     if title.is_empty() {
-        "任务".to_string()
+        "مهمة".to_string()
     } else {
         title
     }

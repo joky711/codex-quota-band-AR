@@ -37,7 +37,7 @@ test("first frame does not wait for storage or phone callbacks", async () => {
       component.onInit.call(viewModel);
 
       assert.equal(storageRequests.length, 2);
-      assert.equal(viewModel.statusText, "读取中");
+      assert.equal(viewModel.statusText, "تحميل");
       assert.equal(viewModel.statusTimeText, "");
       assert.match(viewModel.clockTimeText, /^\d{2}:\d{2}$/);
       assert.equal(component.template(viewModel).tag, "div");
@@ -88,12 +88,12 @@ test("built page applies the privacy-minimized task snapshot beside quota", asyn
         },
       });
 
-      assert.equal(viewModel.taskSummaryText, "2项任务");
+      assert.equal(viewModel.taskSummaryText, "2 مهام");
       assert.equal(viewModel.hasTaskItems, true);
-      assert.equal(viewModel.taskItems[0].statusText, "需要授权");
-      assert.equal(viewModel.taskItems[0].groupText, "需要授权");
-      assert.equal(viewModel.taskItems[1].statusText, "处理中");
-      assert.equal(viewModel.taskItems[1].groupText, "处理中");
+      assert.equal(viewModel.taskItems[0].statusText, "تحتاج إذن");
+      assert.equal(viewModel.taskItems[0].groupText, "تحتاج إذن");
+      assert.equal(viewModel.taskItems[1].statusText, "قيد التنفيذ");
+      assert.equal(viewModel.taskItems[1].groupText, "قيد التنفيذ");
       assert.equal(storageWrites.length, 1);
       assert.equal(component.template(viewModel).tag, "div");
     },
@@ -168,13 +168,13 @@ test("built page applies Snapshot v1 to the visible weekly quota and reset inven
         },
       });
 
-      assert.equal(viewModel.statusText, "已同步");
+      assert.equal(viewModel.statusText, "محدّث");
       assert.equal(viewModel.statusTone, "healthy");
       assert.equal(viewModel.statusTimeText, "", "fresh snapshots do not repeat a sync clock");
       assert.equal(viewModel.resetCountText, "2");
-      assert.equal(viewModel.resetExpiryText, "1月4日到期");
+      assert.equal(viewModel.resetExpiryText, "ينتهي 4/1");
       assert.equal(viewModel.quotaRemainingText, "1%");
-      assert.equal(viewModel.quotaResetText, "1月8日重置");
+      assert.equal(viewModel.quotaResetText, "يتجدد 8/1");
       assert.equal(viewModel.quotaTone, "danger");
       assert.equal(viewModel.fiveHourNumberText, "68");
       assert.equal(viewModel.fiveHourUnitText, "%");
@@ -200,22 +200,22 @@ test("built page tolerates two refresh intervals before showing cached quota", a
     const component = pageExports.default;
     const viewModel = createViewModel(component);
     viewModel.hasSnapshot = true;
-    viewModel.snapshotStatusText = "已同步";
+    viewModel.snapshotStatusText = "محدّث";
     viewModel.snapshotStatusTone = "healthy";
     viewModel.lastSnapshotAtMs = Date.now() - 119_999;
 
     component.updateSyncFreshness.call(viewModel);
 
-    assert.equal(viewModel.statusText, "已同步");
+    assert.equal(viewModel.statusText, "محدّث");
     assert.equal(viewModel.statusTone, "healthy");
 
     viewModel.lastSnapshotAtMs = Date.now() - 121_000;
 
     component.updateSyncFreshness.call(viewModel);
 
-    assert.equal(viewModel.statusText, "缓存");
+    assert.equal(viewModel.statusText, "مخزّن");
     assert.equal(viewModel.statusTone, "warning");
-    assert.equal(viewModel.statusTimeText, "2分");
+    assert.equal(viewModel.statusTimeText, "2 د");
   });
 });
 
@@ -225,11 +225,11 @@ test("built page uses relative minutes for a locally restored cached snapshot", 
     const component = pageExports.default;
     const viewModel = createViewModel(component);
     viewModel.lastSnapshotAtMs = Date.now() - 121_000;
-    component.showCachedStatus.call(viewModel, "显示缓存", "warning");
+    component.showCachedStatus.call(viewModel, "عرض المخزّن", "warning");
 
-    assert.equal(viewModel.statusText, "缓存");
+    assert.equal(viewModel.statusText, "مخزّن");
     assert.equal(viewModel.statusTone, "warning");
-    assert.equal(viewModel.statusTimeText, "2分");
+    assert.equal(viewModel.statusTimeText, "2 د");
   });
 });
 
@@ -245,7 +245,7 @@ test("wearable channel authorization errors direct users to reauthorize in Codex
       component.onInit.call(viewModel);
       connection.onerror({ code: 1001 });
 
-      assert.equal(viewModel.statusText, "需重新授权");
+      assert.equal(viewModel.statusText, "أعد التفويض");
     },
     {
       interconnect: { instance: () => connection },
@@ -270,9 +270,9 @@ test("built page shows relative offline age instead of a last-sync clock when Wi
       code: "windows_unreachable",
     });
 
-    assert.equal(viewModel.statusText, "离线");
+    assert.equal(viewModel.statusText, "غير متصل");
     assert.equal(viewModel.statusTone, "danger");
-    assert.equal(viewModel.statusTimeText, "15小时");
+    assert.equal(viewModel.statusTimeText, "15 س");
     assert.equal(viewModel.quotaTone, "healthy");
     assert.equal(component.template(viewModel).tag, "div");
   });

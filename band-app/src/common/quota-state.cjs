@@ -89,67 +89,67 @@ function createBandView(snapshot, now = new Date()) {
   const windows = sanitized.windows.map((window) => ({
     label: windowLabel(window),
     remainingText: window.status === "current" && Number.isInteger(window.remainingPercent) ? `${window.remainingPercent}%` : "--",
-    resetText: `${formatDate(window.resetsAt)}重置`,
-    compactResetText: window.status === "current" ? `${formatTime(window.resetsAt)}重置` : "待同步",
+    resetText: `يتجدد ${formatDate(window.resetsAt)}`,
+    compactResetText: window.status === "current" ? `يتجدد ${formatTime(window.resetsAt)}` : "بانتظار المزامنة",
     remainingPercent: window.status === "current" && Number.isInteger(window.remainingPercent) ? window.remainingPercent : 0,
     tone: window.status === "current" ? quotaTone(window.remainingPercent) : "unknown",
   }));
-  const primaryQuota = windows.find((window) => window.label === "周额度") ?? null;
-  const fiveHourQuota = windows.find((window) => window.label === "5小时额度") ?? null;
+  const primaryQuota = windows.find((window) => window.label === "الأسبوعية") ?? null;
+  const fiveHourQuota = windows.find((window) => window.label === "حصة 5 ساعات") ?? null;
   const nearest = sanitized.resetInventory.items[0] ?? null;
   return {
     statusText: status.text,
     statusTone: status.tone,
     statusTimeText: hasVisibleData ? formatSyncTime(sanitized.generatedAt, now) : "",
     quotaRemainingText: primaryQuota?.remainingText ?? "--",
-    quotaResetText: primaryQuota?.resetText ?? "暂无额度数据",
+    quotaResetText: primaryQuota?.resetText ?? "لا توجد بيانات",
     quotaTone: sanitized.link.computer === "offline" ? "offline" : primaryQuota?.tone ?? "unknown",
     weeklyProgressPercent: primaryQuota?.remainingPercent ?? 0,
     fiveHourRemainingText: fiveHourQuota?.remainingText ?? "--",
-    fiveHourResetText: fiveHourQuota?.compactResetText ?? "暂无数据",
+    fiveHourResetText: fiveHourQuota?.compactResetText ?? "لا بيانات",
     fiveHourTone: sanitized.link.computer === "offline" ? "offline" : fiveHourQuota?.tone ?? "unknown",
     resetCountText: Number.isInteger(sanitized.resetInventory.availableCount) ? String(sanitized.resetInventory.availableCount) : "--",
     resetTone: resetTone(sanitized.resetInventory.availableCount),
     resetExpiryText: nearest
-      ? `${formatDate(nearest.expiresAt)}到期`
-      : ["missing", "unavailable"].includes(sanitized.resetInventory.status) ? "暂无重置数据" : "暂无可用重置",
+      ? `ينتهي ${formatDate(nearest.expiresAt)}`
+      : ["missing", "unavailable"].includes(sanitized.resetInventory.status) ? "لا بيانات إعادة" : "لا إعادات متاحة",
   };
 }
 
 function errorStatusText(code) {
-  return ({ pairing_required: "需要配对", pairing_revoked: "配对已撤销", private_network_required: "局域网不可用", windows_unreachable: "电脑未连接", windows_response_error: "电脑响应异常", snapshot_too_large: "额度数据异常", unsupported_snapshot_protocol: "请更新应用" })[code] ?? "同步失败";
+  return ({ pairing_required: "يلزم إقران", pairing_revoked: "أُلغي الإقران", private_network_required: "لا توجد شبكة", windows_unreachable: "الكمبيوتر منفصل", windows_response_error: "رد غير صالح", snapshot_too_large: "خطأ بيانات", unsupported_snapshot_protocol: "حدّث التطبيق" })[code] ?? "فشل المزامنة";
 }
 
 function statusPresentation(snapshot) {
-  if (snapshot.sourceStatus === "paused") return { text: "同步已暂停", tone: "warning" };
-  if (snapshot.link.computer === "offline") return { text: "离线", tone: "danger" };
-  if (snapshot.link.codex === "format_changed") return { text: "数据格式变化", tone: "danger" };
-  if (snapshot.link.codex === "stale") return { text: "缓存", tone: "warning" };
-  if (snapshot.sourceStatus === "unavailable") return { text: "额度不可用", tone: "danger" };
-  if (snapshot.sourceStatus === "partial") return { text: "缓存", tone: "warning" };
-  return { text: "已同步", tone: "healthy" };
+  if (snapshot.sourceStatus === "paused") return { text: "متوقف", tone: "warning" };
+  if (snapshot.link.computer === "offline") return { text: "غير متصل", tone: "danger" };
+  if (snapshot.link.codex === "format_changed") return { text: "تغيّرت الصيغة", tone: "danger" };
+  if (snapshot.link.codex === "stale") return { text: "مخزّن", tone: "warning" };
+  if (snapshot.sourceStatus === "unavailable") return { text: "غير متاح", tone: "danger" };
+  if (snapshot.sourceStatus === "partial") return { text: "مخزّن", tone: "warning" };
+  return { text: "محدّث", tone: "healthy" };
 }
 
 function windowLabel(window) {
-  if (window.name === "five_hour" && window.windowMinutes === 300) return "5小时额度";
-  return window.name === "weekly" || window.windowMinutes === 10_080 ? "周额度" : `${window.windowMinutes} 分钟额度`;
+  if (window.name === "five_hour" && window.windowMinutes === 300) return "حصة 5 ساعات";
+  return window.name === "weekly" || window.windowMinutes === 10_080 ? "الأسبوعية" : `حصة ${window.windowMinutes} دقيقة`;
 }
 function quotaTone(value) { return !Number.isInteger(value) ? "unknown" : value < 20 ? "danger" : value < 50 ? "warning" : "healthy"; }
 function resetTone(value) { return !Number.isInteger(value) ? "unknown" : value === 0 ? "danger" : "healthy"; }
 function formatElapsedAge(elapsedMilliseconds) {
   const elapsedMinutes = Math.floor(Math.max(0, Number(elapsedMilliseconds) || 0) / 60_000);
-  if (elapsedMinutes < 1) return "刚刚";
-  if (elapsedMinutes < 60) return `${elapsedMinutes}分`;
-  if (elapsedMinutes < 24 * 60) return `${Math.floor(elapsedMinutes / 60)}小时`;
-  if (elapsedMinutes < 7 * 24 * 60) return `${Math.floor(elapsedMinutes / (24 * 60))}天`;
+  if (elapsedMinutes < 1) return "الآن";
+  if (elapsedMinutes < 60) return `${elapsedMinutes} د`;
+  if (elapsedMinutes < 24 * 60) return `${Math.floor(elapsedMinutes / 60)} س`;
+  if (elapsedMinutes < 7 * 24 * 60) return `${Math.floor(elapsedMinutes / (24 * 60))} ي`;
   const elapsedWeeks = Math.floor(elapsedMinutes / (7 * 24 * 60));
-  return elapsedWeeks > 99 ? "99周+" : `${elapsedWeeks}周`;
+  return elapsedWeeks > 99 ? "+99 أ" : `${elapsedWeeks} أ`;
 }
 function formatClock(value = new Date()) { const date = new Date(value); const pad = (n) => String(n).padStart(2, "0"); return Number.isNaN(date.getTime()) ? { timeText: "--:--" } : { timeText: `${pad(date.getHours())}:${pad(date.getMinutes())}` }; }
-function formatDateTime(value) { const date = new Date(value); const pad = (n) => String(n).padStart(2, "0"); return Number.isNaN(date.getTime()) ? "--" : `${date.getMonth() + 1}月${date.getDate()}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
-function formatSyncTime(value, now) { const date = new Date(value); const current = new Date(now); const pad = (n) => String(n).padStart(2, "0"); if (Number.isNaN(date.getTime())) return "--:--"; const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`; return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth() && date.getDate() === current.getDate() ? time : `${date.getMonth() + 1}月${date.getDate()}日 ${time}`; }
+function formatDateTime(value) { const date = new Date(value); const pad = (n) => String(n).padStart(2, "0"); return Number.isNaN(date.getTime()) ? "--" : `${date.getDate()}/${date.getMonth() + 1} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+function formatSyncTime(value, now) { const date = new Date(value); const current = new Date(now); const pad = (n) => String(n).padStart(2, "0"); if (Number.isNaN(date.getTime())) return "--:--"; const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`; return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth() && date.getDate() === current.getDate() ? time : `${date.getDate()}/${date.getMonth() + 1} ${time}`; }
 function formatTime(value) { const date = new Date(value); const pad = (n) => String(n).padStart(2, "0"); return Number.isNaN(date.getTime()) ? "--:--" : `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
-function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "--" : `${date.getMonth() + 1}月${date.getDate()}日`; }
+function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "--" : `${date.getDate()}/${date.getMonth() + 1}`; }
 function requireTimestamp(value, name) { if (typeof value !== "string" || value.length > 64 || !/^\d{4}-\d{2}-\d{2}T/.test(value) || Number.isNaN(Date.parse(value)) || Date.parse(value) < 0) throw new Error(`invalid ${name}`); return new Date(value).toISOString(); }
 function nullableTimestamp(value, name) { return value === null ? null : requireTimestamp(value, name); }
 function requireEnum(value, allowed, name) { if (!allowed.includes(value)) throw new Error(`invalid ${name}`); return value; }
