@@ -1,4 +1,4 @@
-<p align="right"><a href="README.md">简体中文</a></p>
+<p align="right"><a href="README.md">العربية</a> · <a href="README_ZH.md">简体中文</a></p>
 
 # Codex Quota for Xiaomi Smart Band 10
 
